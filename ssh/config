@@ -1,0 +1,8 @@
+# Tracked SSH template. Put real hosts, usernames, and IPs in
+# ~/.ssh/config.local, which is gitignored. The installer creates it.
+Include ~/.ssh/config.local
+
+Host *
+    AddKeysToAgent yes
+    ServerAliveInterval 60
+    ServerAliveCountMax 3

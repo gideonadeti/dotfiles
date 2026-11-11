@@ -1,0 +1,13 @@
+# Machine-specific shell overrides
+zsh/90-local.zsh
+
+# Real SSH hosts (the tracked ssh/config only includes this file)
+ssh/config.local
+
+# Local/secret files
+*.local
+*.secret
+.env
+
+# Installer backups
+.dotfiles-backup-*/

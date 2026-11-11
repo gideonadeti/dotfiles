@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# retry.sh — run a command until it fails, then show the failing run.
+#
+# Usage: retry [--max N] <command> [args...]
+#
+# Exits 0 when it captures a failure (the harness succeeded),
+# 2 if it never fails within the limit.
+set -uo pipefail
+
+MAX="${RETRY_MAX:-1000}"
+
+usage() {
+    printf 'usage: %s [--max N] <command> [args...]\n' "$(basename "$0")" >&2
+    exit 64
+}
+
+if [ "${1:-}" = "--max" ]; then
+    [ "$#" -ge 3 ] || usage
+    MAX="$2"
+    shift 2
+fi
+
+CMD=("$@")
+[ "${#CMD[@]}" -gt 0 ] || usage
+
+case "$MAX" in
+    ''|*[!0-9]*) printf 'retry: --max must be a positive integer\n' >&2; exit 64 ;;
+esac
+[ "$MAX" -gt 0 ] || { printf 'retry: --max must be a positive integer\n' >&2; exit 64; }
+
+OUT="$(mktemp)"
+ERR="$(mktemp)"
+trap 'rm -f "$OUT" "$ERR"' EXIT INT TERM
+
+run=0
+failed=0
+
+while [ "$run" -lt "$MAX" ]; do
+    run=$((run + 1))
+    if "${CMD[@]}" >"$OUT" 2>"$ERR"; then
+        continue
+    fi
+    failed=1
+    break
+done
+
+if [ "$failed" -eq 0 ]; then
+    printf 'retry: no failure in %d runs\n' "$MAX" >&2
+    exit 2
+fi
+
+printf 'failed on run %d\n\n' "$run"
+printf '=== stdout ===\n'
+cat "$OUT"
+printf '=== stderr ===\n' >&2
+cat "$ERR" >&2

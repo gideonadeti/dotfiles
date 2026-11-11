@@ -1,0 +1,7 @@
+# Machine-specific overrides. This file is gitignored.
+#
+# Examples:
+#   export WORK_API_URL="https://internal.example.com"
+#   alias vpn="sudo wg-quick up work"
+#
+# The installer creates this file from 90-local.zsh.example if it is missing.

@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck zsh
+
+      - name: ShellCheck
+        run: |
+          shellcheck install.sh bootstrap.sh tests/install-test.sh \
+            bin/retry bin/waitport
+
+      - name: Installer test (fake HOME)
+        run: ./tests/install-test.sh
+
+      - name: Shell config loads without oh-my-zsh
+        run: |
+          export HOME="$(mktemp -d)"
+          export DOTFILES="$PWD"
+          ./install.sh
+          zsh -i -c 'alias clr >/dev/null && type marco >/dev/null && echo "zsh booted"'

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# waitport HOST PORT [TIMEOUT_SECONDS]
+#
+# Wait until a TCP port accepts connections. Useful after starting a server
+# in the background or before running integration tests.
+set -uo pipefail
+
+host="${1:-}"
+port="${2:-}"
+timeout="${3:-30}"
+
+if [ -z "$host" ] || [ -z "$port" ]; then
+    printf 'usage: %s HOST PORT [TIMEOUT_SECONDS]\n' "$(basename "$0")" >&2
+    exit 64
+fi
+
+case "$port$timeout" in
+    *[!0-9]*) printf 'waitport: PORT and TIMEOUT must be integers\n' >&2; exit 64 ;;
+esac
+
+start="$(date +%s)"
+
+while ! (exec 3<>"/dev/tcp/$host/$port") 2>/dev/null; do
+    now="$(date +%s)"
+    if [ "$((now - start))" -ge "$timeout" ]; then
+        printf 'waitport: %s:%s not open after %ss\n' "$host" "$port" "$timeout" >&2
+        exit 1
+    fi
+    sleep 1
+done

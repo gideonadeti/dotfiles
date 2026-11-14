@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# pre-commit: block staged changes that look like secrets.
+#
+# Bypass for one commit with:
+#   SKIP_SECRET_SCAN=1 git commit ...
+# or, if you really mean it:
+#   git commit --no-verify
+#
+# The hook scans the staged content of added/modified files. It prints the
+# path and line number, never the secret itself.
+set -u
+
+[ -n "${SKIP_SECRET_SCAN:-}" ] && exit 0
+
+found=0
+
+check() {
+    local file="$1" content="$2" regex="$3" label="$4" line
+    while IFS=: read -r line _; do
+        [ -n "$line" ] || continue
+        printf 'secret-scan: %s:%s: possible %s\n' "$file" "$line" "$label" >&2
+        found=1
+    done < <(printf '%s\n' "$content" | grep -InE -- "$regex" || true)
+}
+
+# Generic "name = value" assignments. The value must be at least 16 chars.
+generic='(api[_-]?key|secret|token|password|passwd)[[:space:]]*[:=][[:space:]]*["'"'"']?[A-Za-z0-9_./+=|-]{16,}'
+
+while IFS= read -r -d '' file; do
+    case "$file" in
+        git/hooks/pre-commit|*.lock|package-lock.json|pnpm-lock.yaml|*.min.js|*.map)
+            continue ;;
+    esac
+
+    content="$(git show ":$file" 2>/dev/null)" || continue
+
+    check "$file" "$content" 'AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}' 'AWS access key'
+    check "$file" "$content" 'gh[pousr]_[A-Za-z0-9]{36,}' 'GitHub token'
+    check "$file" "$content" 'github_pat_[A-Za-z0-9_]{20,}' 'GitHub fine-grained token'
+    check "$file" "$content" 'xox[baprs]-[A-Za-z0-9-]{10,}' 'Slack token'
+    check "$file" "$content" 'sk_live_[0-9A-Za-z]{20,}' 'Stripe live key'
+    check "$file" "$content" 'AIza[0-9A-Za-z_-]{35}' 'Google API key'
+    check "$file" "$content" '-----BEGIN [A-Z ]*PRIVATE KEY-----' 'private key'
+
+    while IFS=: read -r line _; do
+        [ -n "$line" ] || continue
+        printf 'secret-scan: %s:%s: possible secret assignment\n' "$file" "$line" >&2
+        found=1
+    done < <(printf '%s\n' "$content" | grep -IniE -- "$generic" || true)
+done < <(git diff --cached --name-only --diff-filter=ACM -z)
+
+if [ "$found" -ne 0 ]; then
+    cat >&2 <<'EOF'
+
+Commit blocked: staged changes look like they contain a secret.
+Move the value to a gitignored file (for example zsh/90-local.zsh,
+~/.ssh/config.local, or .env), then stage the change again.
+
+Bypass this once with:
+  SKIP_SECRET_SCAN=1 git commit ...
+EOF
+    exit 1
+fi
+
+exit 0

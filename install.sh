@@ -52,6 +52,7 @@ LINKS=(
     "tmux/.tmux.conf:.tmux.conf"
     "git/.gitconfig:.gitconfig"
     "git/ignore:.config/git/ignore"
+    "git/hooks/pre-commit:.config/git/hooks/pre-commit"
     "ssh/config:.ssh/config"
 )
 

@@ -49,6 +49,8 @@ tmux/
 git/
   .gitconfig
   ignore
+  hooks/
+    pre-commit
 ssh/
   config              template; includes config.local
 bin/
@@ -80,6 +82,22 @@ nothing. The installer is idempotent, so running it twice is harmless.
 **Secrets stay out of git.** Machine-specific shell settings belong in
 `zsh/90-local.zsh`; real SSH hosts belong in `~/.ssh/config.local`. Both are
 gitignored, and the installer creates them if they are missing.
+
+## Secret scanning
+
+A pre-commit hook (`git/hooks/pre-commit`, installed globally through
+`core.hooksPath`) blocks staged changes that look like credentials: AWS keys,
+GitHub and Slack tokens, Stripe live keys, private keys, and generic
+`token = "..."` / `password = "..."` assignments.
+
+It prints the file and line, never the value. To bypass it for one commit:
+
+```bash
+SKIP_SECRET_SCAN=1 git commit -m "..."
+```
+
+Secrets still belong in `zsh/90-local.zsh`, `~/.ssh/config.local`, or an
+untracked `.env`, not in a tracked file.
 
 ## SSH
 

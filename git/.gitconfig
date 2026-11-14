@@ -19,3 +19,4 @@
 	graph = log --all --graph --decorate --oneline
 [core]
 	excludesFile = ~/.config/git/ignore
+	hooksPath = ~/.config/git/hooks

@@ -1,0 +1,12 @@
+# Global ignore patterns, shared by every repository.
+# OS junk
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# Editor junk
+*.swp
+*.swo
+*~
+.idea/

@@ -51,6 +51,7 @@ LINKS=(
     "profile/.profile:.profile"
     "tmux/.tmux.conf:.tmux.conf"
     "git/.gitconfig:.gitconfig"
+    "git/ignore:.config/git/ignore"
     "ssh/config:.ssh/config"
 )
 

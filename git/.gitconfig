@@ -16,3 +16,6 @@
 [alias]
     st = status
     lg = log --oneline --graph --decorate
+	graph = log --all --graph --decorate --oneline
+[core]
+	excludesFile = ~/.config/git/ignore

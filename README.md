@@ -48,6 +48,7 @@ tmux/
   .tmux.conf
 git/
   .gitconfig
+  ignore
 ssh/
   config              template; includes config.local
 bin/
